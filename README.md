@@ -1,6 +1,6 @@
 # loopback-next
 
-# About
+# About!
 
 This is the next chapter in the LoopBack story. For practicality we are using a single repository for major refactoring of components. At some point this will be broken out back into smaller modules.
 
