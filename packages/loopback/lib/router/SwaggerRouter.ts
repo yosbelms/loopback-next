@@ -14,17 +14,20 @@ const debug = require('debug')('loopback:SwaggerRouter');
 
 // tslint:disable:no-any
 type MaybeBody = any | undefined;
-type OperationArgs = any[];
+export type OperationArgs = any[];
 type PathParameterValues = {[key: string]: any};
 // tslint:enable:no-any
 
 const parseJsonBody: (req: Request) => Promise<MaybeBody> = Promise.promisify(jsonBody);
 
-type HandlerCallback = (err?: Error | string) => void;
+export type HandlerCallback = (err?: Error | string) => void;
 type RequestHandler = (req: Request, res: Response, cb?: HandlerCallback) => void;
 
 
 export type ControllerFactory = (request: Request, response: Response) => Object;
+
+// tslint:disable-next-line:no-any
+type EndpointInvoker = (controller: Object, operationName: string, args: OperationArgs) => Promise<any>;
 
 /**
  * SwaggerRouter - an express-compatible Router using OpenAPI/Swagger
@@ -93,6 +96,7 @@ export class SwaggerRouter {
     const parsedUrl = url.parse(parsedRequest.url, true);
     parsedRequest.path = parsedUrl.pathname  || '/';
     parsedRequest.query = parsedUrl.query;
+    const invoker: EndpointInvoker = (target, name, args) => this._invoke(target, name, args);
 
     debug('Handle request "%s %s"', request.method, parsedRequest.path);
 
@@ -103,7 +107,7 @@ export class SwaggerRouter {
       } else if (endpointIx >= this._endpoints.length) {
         next();
       } else {
-        this._endpoints[endpointIx++].handle(parsedRequest, response, tryNextEndpoint);
+        this._endpoints[endpointIx++].handle(parsedRequest, response, invoker, tryNextEndpoint);
       }
     };
     tryNextEndpoint();
@@ -126,6 +130,10 @@ export class SwaggerRouter {
 
   public logError(req: Request, statusCode: number, err: Error | string) {
     console.error('Unhandled error in %s %s: %s %s', req.method, req.url, statusCode, (err as Error).stack || err);
+  }
+
+  protected _invoke(controller: Object, operationName: string, args: OperationArgs) {
+    return controller[operationName](...args);
   }
 }
 
@@ -157,7 +165,7 @@ class Endpoint {
     this._pathRegexp = pathToRegexp(path, [], {strict: false, end: true});
   }
 
-  public handle(request: ParsedRequest, response: Response, next: HandlerCallback) {
+  public handle(request: ParsedRequest, response: Response, invoker: EndpointInvoker, next: HandlerCallback) {
     debug('trying endpoint', this);
     if (this._verb !== request.method.toLowerCase()) {
       debug(' -> next (verb mismatch)');
@@ -186,7 +194,7 @@ class Endpoint {
       .then(body => buildOperationArguments(this._spec, request, pathParams, body))
       .then(
         args => {
-          this._invoke(controller, operationName, args, response, next);
+          this._invoke(controller, operationName, args, invoker, response, next);
         },
         err => {
           debug('Cannot parse arguments of operation %s: %s', operationName, err.stack || err);
@@ -194,11 +202,11 @@ class Endpoint {
         });
   }
 
-  private _invoke(controller: Object, operationName: string, args: OperationArgs, response: Response, next: HandlerCallback) {
+  public _invoke(controller: Object, operationName: string, args: OperationArgs, invoker: EndpointInvoker, response: Response, next: HandlerCallback) {
     debug('invoke %s with arguments', operationName, args);
 
     // TODO(bajtos) support sync operations that return the value directly (no Promise)
-    controller[operationName].apply(controller, args).then(
+    invoker(controller, operationName, args).then(
       function onSuccess(result) {
         debug('%s() result -', operationName, result);
         // TODO(bajtos) handle non-string results via JSON.stringify

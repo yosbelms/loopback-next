@@ -7,7 +7,8 @@ import http = require('http');
 import bluebird = require('bluebird');
 import {Context} from '@loopback/context';
 import {Application} from '../lib/application';
-import {SwaggerRouter} from './router/SwaggerRouter';
+import {SwaggerRouter, OperationArgs} from './router/SwaggerRouter';
+import * as assert from 'assert';
 
 const debug = require('debug')('loopback:Server');
 
@@ -39,7 +40,7 @@ export class Server extends Context {
     // TODO(bajtos) support hot-reloading of controllers
     // after the app started. The idea is to rebuild the SwaggerRouter
     // instance whenever a controller was added/deleted.
-    const router = new SwaggerRouter();
+    const router = new LoopBackRouter();
     this.find('applications.*').forEach(appBinding => {
       debug('Registering app controllers for %j', appBinding.key);
       const app = appBinding.getValue() as Application;
@@ -58,5 +59,14 @@ export class Server extends Context {
     // Consider exposing full base URL including http/https scheme prefix
     this.config.port = server.address().port;
     this.state = ServerState.listening;
+  }
+}
+
+class LoopBackRouter extends SwaggerRouter {
+  protected _invoke(controller: Object, operationName: string, args: OperationArgs) {
+    assert(controller instanceof Context);
+    const ctx = controller as Context;
+    controller = ctx.get('CURRENT_CONTROLLER');
+    return super._invoke(controller, operationName, args);
   }
 }

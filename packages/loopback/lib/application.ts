@@ -17,7 +17,9 @@ export class Application extends Context {
       const ctor = b.getValue();
       const ctorFactory = (req: http.ServerRequest, res: http.ServerResponse) => {
         // TODO(bajtos) Create per-request Context, inject Controller constructor parameters
-        return new ctor();
+        const requestContext = this;
+        requestContext.bind('CURRENT_CONTROLLER').to(new ctor());
+        return requestContext;
       };
       const apiSpec = getApiSpec(ctor);
       router.controller(ctorFactory, apiSpec);
