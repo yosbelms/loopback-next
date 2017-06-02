@@ -4,7 +4,8 @@
 // License text available at https://opensource.org/licenses/MIT
 
 import {Context} from './context';
-import {Constructor, instantiateClass} from './resolver';
+import {Constructor, instantiateClass, resolveValues} from './resolver';
+import {isPromise} from './isPromise';
 
 // tslint:disable-next-line:no-any
 export type BoundValue = any;
@@ -88,9 +89,23 @@ export class Binding {
    * );
    * ```
    */
-  toDynamicValue(factoryFn: () => BoundValue | Promise<BoundValue>): this {
-    // TODO(bajtos) allow factoryFn with @inject arguments
-    this.getValue = (ctx) => factoryFn();
+  toDynamicValue(factoryFn: () => BoundValue | Promise<BoundValue>): this;
+  toDynamicValue<A1>(inject1: string, factoryFn: (a1: A1) => BoundValue | Promise<BoundValue>): this;
+  toDynamicValue<A1, A2>(inject1: string, inject2: string, factoryFn: (a1: A1, a2: A2) => BoundValue | Promise<BoundValue>): this;
+  toDynamicValue<A1, A2, A3>(inject1: string, inject2: string, inject3: string, factoryFn: (a1: A1, a2: A2, a3: A3) => BoundValue | Promise<BoundValue>): this;
+  toDynamicValue<A1, A2, A3, A4>(inject1: string, inject2: string, inject3: string, inject4: string, factoryFn: (a1: A1, a2: A2, a3: A3, a4: A4) => BoundValue | Promise<BoundValue>): this;
+
+  // ts-lint:disable-next-line:no-any
+  toDynamicValue(...argKeys: (string|Function)[]): this {
+    const factoryFn: Function = argKeys.pop() as Function;
+    this.getValue = (ctx) => {
+      const valuesOrPromise = resolveValues(argKeys as string[], ctx);
+      if (isPromise(valuesOrPromise)) {
+        return valuesOrPromise.then(values => factoryFn(values) as BoundValue | Promise<BoundValue>);
+      } else {
+        return factoryFn(valuesOrPromise);
+      }
+    };
     return this;
   }
 

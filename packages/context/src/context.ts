@@ -7,11 +7,19 @@ import {Binding, BoundValue} from './binding';
 import {inject} from './inject';
 import {isPromise} from './isPromise';
 
+export type BindFn = (key: string) => Binding;
+
 export class Context {
   private registry: Map<string, Binding>;
 
   constructor(private _parent?: Context) {
     this.registry = new Map();
+
+    const bindBinding = this.bind('bind');
+    bindBinding.getValue = ctx => ctx.bind.bind(ctx);
+
+    const getBinding = this.bind('getBoundValue');
+    getBinding.getValue = ctx => (key: string) => ctx.get(key);
   }
 
   bind(key: string): Binding {

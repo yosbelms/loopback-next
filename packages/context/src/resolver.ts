@@ -133,3 +133,24 @@ export function resolveInjectedProperties(fn: Function, ctx: Context): KV | Prom
   }
 }
 
+export function resolveValues(keys: string[], ctx: Context): BoundValue[] | Promise<BoundValue[]> {
+  const values: BoundValue[] = new Array(keys.length);
+  let asyncResolvers: Promise<void>[] | undefined = undefined;
+
+  for (let ix = 0; ix < keys.length; ix++) {
+    const binding = ctx.getBinding(keys[ix]);
+    const valueOrPromise = binding.getValue(ctx);
+    if (isPromise(valueOrPromise)) {
+      if (!asyncResolvers) asyncResolvers = [];
+      asyncResolvers.push(valueOrPromise.then((v: BoundValue) => values[ix] = v));
+    } else {
+      values[ix] = valueOrPromise as BoundValue;
+    }
+  }
+
+  if (asyncResolvers) {
+    return Promise.all(asyncResolvers).then(() => values);
+  } else {
+    return values;
+  }
+}

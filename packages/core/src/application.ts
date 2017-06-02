@@ -59,6 +59,8 @@ export class Application extends Context {
 
     this.handleHttp = (req: ServerRequest, res: ServerResponse) =>
       this._handleHttpRequest(req, res);
+
+    this.setupSequenceBindings();
   }
 
   protected _handleHttpRequest(request: ServerRequest, response: ServerResponse) {
@@ -99,6 +101,11 @@ export class Application extends Context {
    */
   public controller<T>(controllerCtor: Constructor<T>): Binding {
     return this.bind('controllers.' + controllerCtor.name).toClass(controllerCtor);
+  }
+
+  protected setupSequenceBindings() {
+    this.bind('')
+
   }
 }
 
