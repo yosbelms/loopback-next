@@ -1,0 +1,27 @@
+{
+  "application": {},
+  "dataSources": {
+    "db": {
+      "connector": "remote"
+    }
+  },
+  "models": [
+    {
+      "name": "Customer",
+      "config": {
+        "dataSource": "db"
+      },
+      "definition": {
+        "name": "Customer",
+        "base": "User"
+      },
+      "sourceFile": "loopback-boot#models#customer.coffee"
+    }
+  ],
+  "mixins": [],
+  "components": [],
+  "bootScripts": [
+    "loopback-boot#boot#configure.coffee"
+  ],
+  "apis": {}
+}

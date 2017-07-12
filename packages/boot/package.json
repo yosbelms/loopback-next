@@ -1,0 +1,54 @@
+{
+  "name": "@loopback/boot",
+  "version": "4.0.0-alpha.9",
+  "description": "Convention-based bootstrapper for LoopBack applications",
+  "keywords": [
+    "StrongLoop",
+    "LoopBack",
+    "Configuration",
+    "Bootstrap"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "acceptance": "mocha --opts ../../test/mocha.opts 'test/acceptance/**/*.ts'",
+    "build": "npm run build:lib && npm run build:lib6",
+    "build:lib": "node ../../bin/compile-package es2017",
+    "build:lib6": "node ../../bin/compile-package es2015",
+    "clean": "rm -rf loopback-boot*.tgz lib* package",
+    "prepublish": "npm run build",
+    "pretest": "npm run build",
+    "integration": "mocha --opts ../../test/mocha.opts 'test/integration/**/*.ts'",
+    "test": "mocha --opts ../../test/mocha.opts 'test/unit/**/*.ts' 'test/integration/**/*.ts' 'test/acceptance/**/*.ts'",
+    "unit": "mocha --opts ../../test/mocha.opts 'test/unit/**/*.ts'",
+    "verify": "npm pack && tar xf loopback-boot*.tgz && tree package && npm run clean"
+  },
+  "author": "IBM",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.4.0",
+    "bluebird": "^3.4.0",
+    "commondir": "^1.0.1",
+    "debug": "^2.2.0",
+    "lodash": "^4.13.1",
+    "semver": "^5.1.0",
+    "strong-globalize": "^3.0.0",
+    "toposort": "^1.0.0"
+  },
+  "devDependencies": {
+    "@loopback/testlab": "^4.0.0-alpha.5",
+    "@types/node": "^8.0.7",
+    "fs-extra": "^3.0.1",
+    "supertest": "^3.0.0"
+  },
+  "files": [
+    "README.md",
+    "index.js",
+    "index.d.ts",
+    "lib",
+    "lib6"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/strongloop/loopback-next.git"
+  }
+}
