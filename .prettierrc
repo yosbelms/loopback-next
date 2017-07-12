@@ -1,0 +1,6 @@
+# Prettier configuration in YAML
+eslintIntegration: true
+bracketSpacing: false
+singleQuote: true
+printWidth: 80
+trailingComma: all
