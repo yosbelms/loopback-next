@@ -22,7 +22,7 @@ class Component extends PluginBase {
   }
 
   getRootDir() {
-    return this.options.componentRootDir || this.options.rootDir;
+    return this.config.componentRootDir || this.config.rootDir;
   }
 
   buildInstructions(context, rootDir, config) {

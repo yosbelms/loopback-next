@@ -31,12 +31,12 @@ class Mixin extends PluginBase {
   buildInstructions(context, rootDir, config) {
     const modelsMeta = context.configurations.mixins._meta || {};
     const modelInstructions = context.instructions.models;
-    const mixinSources = this.options.mixinSources || modelsMeta.mixins ||
+    const mixinSources = this.config.mixinSources || modelsMeta.mixins ||
       ['./mixins'];
-    const scriptExtensions = this.options.scriptExtensions || require.extensions;
+    const scriptExtensions = this.config.scriptExtensions || require.extensions;
 
     const mixinInstructions = buildAllMixinInstructions(
-      rootDir, this.options, mixinSources, scriptExtensions, modelInstructions);
+      rootDir, this.config, mixinSources, scriptExtensions, modelInstructions);
 
     return mixinInstructions;
   }

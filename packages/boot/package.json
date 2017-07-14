@@ -25,6 +25,7 @@
   "author": "IBM",
   "license": "MIT",
   "dependencies": {
+    "@loopback/context": "^4.0.0-alpha.10",
     "async": "^2.4.0",
     "bluebird": "^3.4.0",
     "commondir": "^1.0.1",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@loopback/testlab": "^4.0.0-alpha.5",
+    "@types/lodash": "^4.14.68",
     "@types/node": "^8.0.7",
     "fs-extra": "^3.0.1",
     "supertest": "^3.0.0"

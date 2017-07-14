@@ -16,7 +16,7 @@ export default function(options) {
 };
 
 class Application extends PluginBase {
-  constructor(public options) {
+  constructor(public config) {
     super(options, 'application', 'config');
   }
 
@@ -26,7 +26,7 @@ class Application extends PluginBase {
     assertLoopBackVersion(app);
 
     const appConfig = context.instructions.application;
-    setEnv(app, context.instructions.env || this.options.env);
+    setEnv(app, context.instructions.env || this.config.env);
     setHost(app, appConfig);
     setPort(app, appConfig);
     setApiRoot(app, appConfig);

@@ -8,10 +8,10 @@
 import * as util from 'util';
 import * as utils from './utils';
 import * as path from 'path';
-import async from 'async';
+import * as async from 'async';
 const debug = require('debug')('loopback:boot:plugin-loader');
 import {PluginBase} from './plugin-base';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export default function(options) {
   return new PluginScript(options);
@@ -23,7 +23,7 @@ class PluginScript extends PluginBase {
   }
 
   load(context) {
-    const options = this.options;
+    const options = this.config;
     const appRootDir = options.rootDir;
     // require directories
     let pluginDirs = options.pluginDirs || []; // precedence
@@ -57,7 +57,7 @@ class PluginScript extends PluginBase {
     pluginScripts.forEach(function(ps) {
       debug('Loading %s', ps);
       const factory = require(ps);
-      const handler = factory(self.options);
+      const handler = factory(self.config);
       const name = handler.name || path.basename(ps, '.js');
       debug('Loaded plugin name: %s', name);
       plugins[name] = handler;

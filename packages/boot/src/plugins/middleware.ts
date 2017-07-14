@@ -28,7 +28,7 @@ class Middleware extends PluginBase {
   }
 
   getRootDir() {
-    return this.options.middlewareRootDir || this.options.rootDir;
+    return this.config.middlewareRootDir || this.config.rootDir;
   }
 
   merge(target, config, fileName) {

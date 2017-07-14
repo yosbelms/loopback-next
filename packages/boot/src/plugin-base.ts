@@ -9,40 +9,57 @@ import * as fs from 'fs';
 import * as path from 'path';
 const debug = require('debug')('loopback:boot:plugin');
 import * as assert from 'assert';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import * as util from './utils';
 import g from './globalize';
 
+import {Context} from '@loopback/context';
+
 export interface Plugin {
   name: string;
-  load?(context);
-  configure?(context, config);
-  compile?(context);
+  load?(context: Context): Promise<void>;
+  configure?(context: Context, config: Object): Promise<void>;
+  compile?(context: Context): Promise<void>;
+}
+
+export interface AnyObject {
+  // tslint:disable-next-line:no-any
+  [property: string]: any;
+}
+
+export interface PluginConfig extends AnyObject {
+  // tslint:disable-next-line:no-any
+  [property: string]: any;
+  rootDir?: string;
 }
 
 export abstract class PluginBase implements Plugin {
-  
-  constructor(public options, public name, public artifact?: string) {
-    this.options = options || {};
-    this.name = name || options.name;
-    this.artifact = artifact || options.artifact;
+  constructor(
+    public config: PluginConfig,
+    public name: string,
+    public artifact?: string,
+  ) {
+    this.config = config || {};
+    this.name = name || config.name;
+    this.artifact = artifact || config.artifact;
   }
 
   getRootDir() {
-    return this.options.rootDir;
+    return this.config.rootDir;
   }
 
-  load(context) {
-    const rootDir = this.getRootDir() || this.options.rootDir;
-    const env = this.options.env;
+  load(context: Context) {
+    const rootDir = this.getRootDir() || this.config.rootDir;
+    const env = this.config.env;
     assert(this.name, 'Plugin name must to be set');
     debug('Root dir: %s, env: %s, artifact: %s', rootDir, env, this.artifact);
     let config = {};
-    if (this.options[this.name]) {
+    if (this.config[this.name]) {
       // First check if options have the corresponding config object
-      debug('Artifact: %s is using provided config obj instead' +
-      ' of config file');
-      config = this.options[this.name];
+      debug(
+        'Artifact: %s is using provided config obj instead' + ' of config file',
+      );
+      config = this.config[this.name];
     } else {
       if (this.artifact) {
         config = this.loadNamed(rootDir, env, this.artifact);
@@ -52,7 +69,7 @@ export abstract class PluginBase implements Plugin {
     return this.configure(context, config);
   }
 
-  configure(context, config) {
+  configure(context: Context, config) {
     config = config || {};
     // Register as context.configurations.<plugin-name>
     if (!context.configurations) {
@@ -100,8 +117,11 @@ export abstract class PluginBase implements Plugin {
    */
   findConfigFiles(rootDir: string, env, name: string, exts?) {
     const master = ifExists(name + '.json');
-    if (!master && (ifExistsWithAnyExt(name + '.local') ||
-      ifExistsWithAnyExt(name + '.' + env))) {
+    if (
+      !master &&
+      (ifExistsWithAnyExt(name + '.local') ||
+        ifExistsWithAnyExt(name + '.' + env))
+    ) {
       g.warn('WARNING: Main config file "%s{{.json}}" is missing', name);
     }
     if (!master) return [];
@@ -116,13 +136,13 @@ export abstract class PluginBase implements Plugin {
       return c !== undefined;
     });
 
-    function ifExists(fileName) {
+    function ifExists(fileName: string) {
       const filePath = path.resolve(rootDir, fileName);
       return util.fileExistsSync(filePath) ? filePath : undefined;
     }
 
-    function ifExistsWithAnyExt(fileName) {
-      const extensions = exts || ['js', 'json'];
+    function ifExistsWithAnyExt(fileName: string) {
+      const extensions = exts || ['js', 'ts', 'json'];
       let file;
       for (let i = 0, n = extensions.length; i < n; i++) {
         file = ifExists(fileName + '.' + extensions[i]);
@@ -139,7 +159,7 @@ export abstract class PluginBase implements Plugin {
    * @param {Array.<String>} files
    * @returns {Array.<Object>}
    */
-  _loadConfigFiles(files) {
+  _loadConfigFiles(files: string[]) {
     return files.map(function(f) {
       let config = require(f);
       config = _.cloneDeep(config);
@@ -155,7 +175,7 @@ export abstract class PluginBase implements Plugin {
    * Merge multiple configuration objects into a single one.
    * @param {Array.<Object>} configObjects
    */
-  _mergeConfigurations(configObjects) {
+  _mergeConfigurations(configObjects: AnyObject[]) {
     const result = configObjects.shift() || {};
     while (configObjects.length) {
       const next = configObjects.shift();
@@ -202,8 +222,11 @@ export abstract class PluginBase implements Plugin {
     const newValue = config[key];
 
     if (!hasCompatibleType(origValue, newValue)) {
-      return 'Cannot merge values of incompatible types for the option `' +
-        fullKey + '`.';
+      return (
+        'Cannot merge values of incompatible types for the option `' +
+        fullKey +
+        '`.'
+      );
     }
 
     if (Array.isArray(origValue)) {
@@ -220,8 +243,12 @@ export abstract class PluginBase implements Plugin {
 
   _mergeArrays(target, config, keyPrefix) {
     if (target.length !== config.length) {
-      return 'Cannot merge array values of different length' +
-        ' for the option `' + keyPrefix + '`.';
+      return (
+        'Cannot merge array values of different length' +
+        ' for the option `' +
+        keyPrefix +
+        '`.'
+      );
     }
 
     // Use for(;;) to iterate over undefined items, for(in) would skip them.
@@ -234,12 +261,12 @@ export abstract class PluginBase implements Plugin {
     return null; // no error
   }
 
-  buildInstructions(context, rootDir, config) {};
+  buildInstructions(context, rootDir, config) {}
 
   compile(context) {
     let instructions;
     if (typeof this.buildInstructions === 'function') {
-      const rootDir = this.options.rootDir;
+      const rootDir = this.config.rootDir;
       const config = context.configurations[this.name] || {};
       instructions = this.buildInstructions(context, rootDir, config);
     } else {
@@ -249,8 +276,8 @@ export abstract class PluginBase implements Plugin {
     // Register as context.instructions.<plugin-name>
     if (!context.instructions) {
       context.instructions = {};
-      if (this.options.appId) {
-        context.instructions.appId = this.options.appId;
+      if (this.config.appId) {
+        context.instructions.appId = this.config.appId;
       }
     }
     context.instructions[this.name] = instructions;
@@ -268,16 +295,13 @@ export abstract class PluginBase implements Plugin {
         return getConfigVariable(app, config, useEnvVars);
 
       // anything but an array or object
-      if (typeof config !== 'object' || config == null)
-        return config;
+      if (typeof config !== 'object' || config == null) return config;
 
       // recurse into array elements
-      if (Array.isArray(config))
-        return config.map(interpolateVariables);
+      if (Array.isArray(config)) return config.map(interpolateVariables);
 
       // Not a plain object. Examples: RegExp, Date,
-      if (!config.constructor || config.constructor !== Object)
-        return config;
+      if (!config.constructor || config.constructor !== Object) return config;
 
       // recurse into object props
       const interpolated = {};

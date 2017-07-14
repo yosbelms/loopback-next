@@ -30,7 +30,7 @@ class Model extends PluginBase {
   }
 
   getRootDir() {
-    return this.options.modelsRootDir;
+    return this.config.modelsRootDir;
   }
 
   load(context) {
@@ -44,11 +44,11 @@ class Model extends PluginBase {
     delete modelsConfig._meta;
     context.configurations.mixins._meta = modelsMeta;
 
-    const modelSources = this.options.modelSources || modelsMeta.sources ||
+    const modelSources = this.config.modelSources || modelsMeta.sources ||
       ['./models'];
     const modelInstructions = buildAllModelInstructions(
-      rootDir, modelsConfig, modelSources, this.options.modelDefinitions,
-      this.options.scriptExtensions);
+      rootDir, modelsConfig, modelSources, this.config.modelDefinitions,
+      this.config.scriptExtensions);
     return modelInstructions;
   }
 

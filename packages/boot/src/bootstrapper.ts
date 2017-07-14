@@ -5,14 +5,13 @@
 
 'use strict';
 
-import _ from 'lodash';
+import * as _ from 'lodash';
 import * as assert from 'assert';
-import async from 'async';
+import * as async from 'async';
 import * as utils from './utils';
 import * as path from 'path';
 import pluginLoader from './plugin-loader';
 const debug = require('debug')('loopback:boot:bootstrapper');
-import Promise from 'bluebird';
 import {arrayToObject} from './utils';
 
 function createPromiseCallback() {
@@ -61,7 +60,7 @@ export class Bootstrapper {
   options: {[property:string]: any};
   phases: string[];
   builtinPlugins: string[];
-  
+
   constructor(options) {
     this.plugins = [];
     options = options || {};

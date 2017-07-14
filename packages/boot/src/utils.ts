@@ -10,7 +10,7 @@ import * as path from 'path';
 const Module = require('module');
 import * as fs from 'fs';
 import * as assert from 'assert';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import g from './globalize';
 export {arrayToObject};
 export {tryReadDir};
@@ -33,14 +33,14 @@ export const FILE_EXTENSION_JSON = exports.FILE_EXTENSION_JSON = '.json';
  * @return {Array.<String>} A list of absolute paths to pass to `require()`.
  */
 
-function findScripts(dir, scriptExtensions) {
+function findScripts(dir: string, scriptExtensions) {
   assert(dir, 'cannot require directory contents without directory name');
 
   const files = tryReadDir(dir);
   scriptExtensions = scriptExtensions || require.extensions;
 
   // sort files in lowercase alpha for linux
-  files.sort(function(a, b) {
+  files.sort(function(a: string, b: string) {
     a = a.toLowerCase();
     b = b.toLowerCase();
 
@@ -104,7 +104,7 @@ function getExcludedExtensions() {
   };
 }
 
-function arrayToObject(array) {
+function arrayToObject(array: any[]) {
   return array.reduce(function(obj, val) {
     obj[val] = val;
     return obj;
@@ -118,7 +118,7 @@ function isPreferredExtension(filename, includeExtensions) {
   return (ext in includeExtensions) && !(ext in getExcludedExtensions());
 }
 
-function fixFileExtension(filepath, files, scriptExtensions?) {
+function fixFileExtension(filepath: string, files: string[], scriptExtensions?) {
   const results = [];
   let otherFile;
 
