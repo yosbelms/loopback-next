@@ -37,4 +37,8 @@ echo "TRAVIS_REPO_SLUG => $TRAVIS_REPO_SLUG"
 
 # Always lint the triggering commit
 # - Covers direct commits
-./node_modules/.bin/commitlint --from="$TRAVIS_COMMIT"
+if [[ $TRAVIS_PULL_REQUEST_SHA != "" && $TRAVIS_PULL_REQUEST_SHA != $TRAVIS_COMMIT ]]; then
+  ./node_modules/.bin/commitlint --from="$TRAVIS_PULL_REQUEST_SHA"
+else
+  ./node_modules/.bin/commitlint --from="$TRAVIS_COMMIT"
+fi
