@@ -1,4 +1,4 @@
-import {relation, AnyObject} from '../index';
+import {AnyObject} from '..';
 import * as assert from 'assert';
 
 // Copyright IBM Corp. 2017. All Rights Reserved.
@@ -59,7 +59,7 @@ export interface Where {
 /**
  * Order by direction
  */
-export type Direction = 'ASC' | 'DESC' | 1 | -1;
+export type Direction = 'ASC' | 'DESC';
 
 /**
  * Order by
@@ -349,15 +349,7 @@ export class FilterBuilder {
         return this;
       }
       for (const i in order) {
-        let dir: string;
-        if (order[i] === 1) {
-          dir = 'ASC';
-        } else if (order[i] === -1) {
-          dir = 'DESC';
-        } else {
-          dir = <string>order[i];
-        }
-        this.filter.order!.push(`${i} ${dir}`);
+        this.filter.order!.push(`${i} ${order[i]}`);
       }
     });
     return this;
