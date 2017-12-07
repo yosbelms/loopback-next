@@ -7,6 +7,7 @@
 const BaseGenerator = require('./base-generator');
 const path = require('path');
 const utils = require('./utils');
+const pkg = require('../package.json');
 
 module.exports = class ProjectGenerator extends BaseGenerator {
   // Note: arguments and options should be defined in the constructor.
@@ -64,7 +65,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
       'prettier',
       'mocha',
       'loopbackBuild',
-    ].forEach(n => {
+    ].forEach((n) => {
       if (this.options[n]) {
         this.projectInfo[n] = this.options[n];
       }
@@ -90,7 +91,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
       },
     ];
 
-    return this.prompt(prompts).then(props => {
+    return this.prompt(prompts).then((props) => {
       Object.assign(this.projectInfo, props);
     });
   }
@@ -110,7 +111,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
       },
     ];
 
-    return this.prompt(prompts).then(props => {
+    return this.prompt(prompts).then((props) => {
       Object.assign(this.projectInfo, props);
     });
   }
@@ -118,7 +119,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
   promptOptions() {
     if (this.shouldExit()) return false;
     const choices = [];
-    ['tslint', 'prettier', 'mocha', 'loopbackBuild'].forEach(f => {
+    ['tslint', 'prettier', 'mocha', 'loopbackBuild'].forEach((f) => {
       if (!this.options[f]) {
         choices.push({
           name: 'Enable ' + f,
@@ -137,15 +138,15 @@ module.exports = class ProjectGenerator extends BaseGenerator {
         when: choices.length > 0,
       },
     ];
-    return this.prompt(prompts).then(props => {
-      const settings = props.settings || choices.map(c => c.name);
-      const features = choices.map(c => {
+    return this.prompt(prompts).then((props) => {
+      const settings = props.settings || choices.map((c) => c.name);
+      const features = choices.map((c) => {
         return {
           key: c.key,
           value: settings.indexOf(c.name) !== -1,
         };
       });
-      features.forEach(f => (this.projectInfo[f.key] = f.value));
+      features.forEach((f) => (this.projectInfo[f.key] = f.value));
     });
   }
 
@@ -161,7 +162,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
         project: this.projectInfo,
       },
       {},
-      {globOptions: {dot: true}}
+      {globOptions: {dot: true}},
     );
 
     // Rename `_.gitignore` back to `.gitignore`.
@@ -169,7 +170,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
     // if it's there in the templates.
     this.fs.move(
       this.destinationPath('_.gitignore'),
-      this.destinationPath('.gitignore')
+      this.destinationPath('.gitignore'),
     );
 
     // Copy project type specific files from ./templates
@@ -180,7 +181,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
         project: this.projectInfo,
       },
       {},
-      {globOptions: {dot: true}}
+      {globOptions: {dot: true}},
     );
 
     if (!this.projectInfo.tslint) {
@@ -194,7 +195,7 @@ module.exports = class ProjectGenerator extends BaseGenerator {
     if (!this.projectInfo.loopbackBuild) {
       this.fs.move(
         this.destinationPath('package.plain.json'),
-        this.destinationPath('package.json')
+        this.destinationPath('package.json'),
       );
     } else {
       this.fs.delete(this.destinationPath('package.plain.json'));
@@ -203,10 +204,19 @@ module.exports = class ProjectGenerator extends BaseGenerator {
     if (!this.projectInfo.mocha) {
       this.fs.delete(this.destinationPath('test/mocha.opts'));
     }
+
+    this._writeDefaultConfig();
   }
 
   install() {
     if (this.shouldExit()) return false;
     this.npmInstall(null, {}, {cwd: this.destinationRoot()});
+  }
+
+  _writeDefaultConfig() {
+    return this.config.defaults({
+      cliVersion: pkg.version,
+      type: this.projectInfo.projectType,
+    });
   }
 };
